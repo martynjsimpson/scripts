@@ -10,10 +10,20 @@
 
 ### By Sales Order Number
 
-    /data/DNRRentalOrderHeaders?$filter=SalesOrderNumber eq 'SON035000317'&cross-company=true
+    /data/DNRRentalOrderHeaders?$filter=SalesOrderNumber eq '334195'&cross-company=true
 
 ## Rental Order Lines 
 
 ### By Sales Order Number
 
     /data/DNRRentalOrderLines?$filter=SalesOrderNumber eq 'VALUE'&cross-company=true
+
+## Part Release
+
+### All Part Releases
+
+    /data/EBCReleaseProductEntitys
+
+### Failed Part Releases
+
+    /data/EBCReleaseProductEntitys?$filter=IsSuccess eq Microsoft.Dynamics.DataEntities.NoYes'No'
