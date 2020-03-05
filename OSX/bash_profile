@@ -1,0 +1,37 @@
+#----------#
+#  Prompt  #
+#----------#
+
+# Default: \h:\W \u\$
+if [ $TERM = 'xterm-256color' ]
+then
+    #                           Username              @               Hostname              :              Directory              $
+    #            [     pink      ]   [    yellow     ]  [     blue     ]   [    yellow     ]  [    green     ]   [    yellow     ]   [ reset ]
+    export PS1="\[\033[38;5;127m\]\u\[\033[38;5;226m\]@\[\033[38;5;32m\]\H\[\033[38;5;226m\]:\[\033[38;5;48m\]\w\[\033[38;5;226m\]$ \[\033[m\]"
+else
+    export PS1="\u@\H:\w$ "
+fi
+
+
+
+#-----------#
+#  History  #
+#-----------#
+
+# Defaults: 500
+export HISTSIZE=5000      # When an interactive shell exits, the last HISTSIZE lines are saved from the history list to HISTFILE.
+export HISTFILESIZE=5000  # After saving the history, the history file is truncated to contain no more than HISTFILESIZE lines.
+
+# List long
+alias ll='ls -laG'          # OS X
+
+
+alias lessx='less -MNS'
+
+alias nosleep='pmset noidle'
+
+export PATH="/usr/local/opt/ncurses/bin:$PATH"
+export PATH="/usr/local/opt/icu4c/sbin:$PATH"
+export PATH="/usr/local/opt/gettext/bin:$PATH"
+export PATH="/usr/local/opt/icu4c/bin:$PATH"
+export PATH="/usr/local/opt/ncurses/bin:$PATH"
