@@ -12,7 +12,7 @@
 
     /data/DNRRentalOrderHeaders?$filter=SalesOrderNumber eq '334195'&cross-company=true
 
-## Rental Order Lines 
+## Rental Order Lines
 
 ### By Sales Order Number
 
