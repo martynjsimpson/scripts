@@ -30,13 +30,13 @@ ORDER BY qs.total_worker_time DESC
 KILL { session ID | UOW } [ WITH STATUSONLY ]
 ```
 
-### SP_WHO Information
+## SP_WHO Information
 sp_who supports parameters of SPID or Username
 ```SQL
 sp_who [ [ @loginame = ] 'login' | session ID | 'ACTIVE' ]  
 ```
 
-### Find all Active queries
+## Find all Active queries
 ```SQL
 SELECT      r.start_time [Start Time],session_ID [SPID],
             DB_NAME(database_id) [Database],
