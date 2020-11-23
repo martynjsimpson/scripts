@@ -28,19 +28,20 @@ GO
 ## Get all index fragmentation info for a selected DB
 ```SQL
 SELECT
-	OBJECT_NAME(ind.OBJECT_ID) AS TableName,
-	OBJECT_SCHEMA_NAME(ind.OBJECT_ID) as schemaName,
-	ind.name AS IndexName,
-	indexstats.index_type_desc AS IndexType,
-	indexstats.avg_fragmentation_in_percent
- FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, NULL) indexstats
-   INNER JOIN sys.indexes ind ON ind.object_id = indexstats.object_id
-        AND ind.index_id = indexstats.index_id
-  WHERE
--- indexstats.avg_fragmentation_in_percent , e.g. > 30, you can specify any number in percent
-   indexstats.avg_fragmentation_in_percent > 30
-  AND ind.Name is not null
-  ORDER BY indexstats.avg_fragmentation_in_percent DESC
+ OBJECT_NAME(ind.OBJECT_ID) AS TableName,
+ OBJECT_SCHEMA_NAME(ind.OBJECT_ID) as schemaName,
+ ind.name AS IndexName,
+ indexstats.index_type_desc AS IndexType,
+ indexstats.avg_fragmentation_in_percent
+FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, NULL) indexstats
+  INNER JOIN sys.indexes ind ON ind.object_id = indexstats.object_id
+       AND ind.index_id = indexstats.index_id
+ WHERE
+--	indexstats.avg_fragmentation_in_percent , e.g. > 30, you can specify any number in percent
+ indexstats.avg_fragmentation_in_percent > 30
+ AND ind.Name is not null
+ AND indexstats.page_count > 500 -- Don't show me small tables
+ ORDER BY indexstats.avg_fragmentation_in_percent DESC
 ```
 
 ## Rebuild or Reorg all indexes in a given DB depending on limits.
@@ -65,9 +66,10 @@ declare FragmentedTableList cursor for
    INNER JOIN sys.indexes ind ON ind.object_id = indexstats.object_id
         AND ind.index_id = indexstats.index_id
   WHERE
--- indexstats.avg_fragmentation_in_percent , e.g. > 30, you can specify any number in percent.
-   indexstats.avg_fragmentation_in_percent > 30
-  AND ind.Name is not null
+--	indexstats.avg_fragmentation_in_percent , e.g. > 30, you can specify any number in percent
+	indexstats.avg_fragmentation_in_percent > 30
+	AND ind.Name is not null
+	AND indexstats.page_count > 500 -- Don't rebuild/reorg small tables
   ORDER BY indexstats.avg_fragmentation_in_percent DESC
 
     OPEN FragmentedTableList
@@ -77,7 +79,7 @@ declare FragmentedTableList cursor for
     WHILE @@FETCH_STATUS = 0
     BEGIN
       print 'Processing ' + @indexName + 'on table ' + @schemaName + '.' + @tableName + ' which is ' + cast(@percentFragment as nvarchar(50)) + ' fragmented'
-      if(@percentFragment>= 50) -- Anything higher than this percentage will be Rebuilt, ELSE Reorg
+      if(@percentFragment>= 50)
       BEGIN
 		EXEC( 'ALTER INDEX ' +  @indexName + ' ON ' + @schemaName + '.' + @tableName + ' REBUILD; ')
 		print 'Finished Rebuild ' + @indexName + 'on table ' + @schemaName + '.' + @tableName
