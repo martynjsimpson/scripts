@@ -27,17 +27,20 @@ GO
 
 ## Get all index fragmentation info for a selected DB
 ```SQL
-SELECT OBJECT_NAME(ind.OBJECT_ID) AS TableName,
-  ind.name AS IndexName, indexstats.index_type_desc AS IndexType,
-  indexstats.avg_fragmentation_in_percent
-FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, NULL) indexstats
-  INNER JOIN sys.indexes ind ON ind.object_id = indexstats.object_id
-       AND ind.index_id = indexstats.index_id
- WHERE
--- Line below set to 5% for fragmentation limit to stop showing everything
-  indexstats.avg_fragmentation_in_percent > 5
- AND ind.Name is not null
- ORDER BY indexstats.avg_fragmentation_in_percent DESC
+SELECT
+	OBJECT_NAME(ind.OBJECT_ID) AS TableName,
+	OBJECT_SCHEMA_NAME(ind.OBJECT_ID) as schemaName,
+	ind.name AS IndexName,
+	indexstats.index_type_desc AS IndexType,
+	indexstats.avg_fragmentation_in_percent
+ FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, NULL) indexstats
+   INNER JOIN sys.indexes ind ON ind.object_id = indexstats.object_id
+        AND ind.index_id = indexstats.index_id
+  WHERE
+-- indexstats.avg_fragmentation_in_percent , e.g. > 30, you can specify any number in percent
+   indexstats.avg_fragmentation_in_percent > 30
+  AND ind.Name is not null
+  ORDER BY indexstats.avg_fragmentation_in_percent DESC
 ```
 
 ## Rebuild or Reorg all indexes in a given DB depending on limits.
