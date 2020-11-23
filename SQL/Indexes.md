@@ -16,6 +16,10 @@ Reorganizing can be pretty cool. ‘Reorganizing’ an index is always an online
 
 https://www.brentozar.com/archive/2013/09/index-maintenance-sql-server-rebuild-reorganize/
 
+Generally, you should not be concerned with fragmentation levels of indexes with less than 1,000 pages. In the tests, indexes containing more than 10,000 pages realized performance gains, with the biggest gains on indexes with significantly more pages (greater than 50,000 pages)."
+
+https://dba.stackexchange.com/questions/5365/why-is-my-database-still-fragmented-after-i-rebuilt-and-reindexed-everything
+
 ## Create an Index
 ```SQL
 USE [<DBName>]
