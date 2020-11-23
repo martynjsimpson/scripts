@@ -42,47 +42,50 @@ FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, NULL) indexstats
 
 ## Rebuild or Reorg all indexes in a given DB depending on limits.
 ```SQL
-use --DBNAME--
+use --DB_Name--
 GO
 
 declare @tableName nvarchar(500)
 declare @indexName nvarchar(500)
 declare @indexType nvarchar(55)
 declare @percentFragment decimal(11,2)
+declare @schemaName nvarchar(500)
 
 declare FragmentedTableList cursor for
- SELECT OBJECT_NAME(ind.OBJECT_ID) AS TableName,
-   ind.name AS IndexName, indexstats.index_type_desc AS IndexType,
-   indexstats.avg_fragmentation_in_percent
+ SELECT
+	OBJECT_NAME(ind.OBJECT_ID) AS TableName,
+	OBJECT_SCHEMA_NAME(ind.OBJECT_ID) as schemaName,
+	ind.name AS IndexName,
+	indexstats.index_type_desc AS IndexType,
+	indexstats.avg_fragmentation_in_percent
  FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, NULL) indexstats
    INNER JOIN sys.indexes ind ON ind.object_id = indexstats.object_id
         AND ind.index_id = indexstats.index_id
   WHERE
--- indexstats.avg_fragmentation_in_percent , e.g. > 30, you can specify any number in percent. 30% is a good starting point.
+-- indexstats.avg_fragmentation_in_percent , e.g. > 30, you can specify any number in percent.
    indexstats.avg_fragmentation_in_percent > 30
   AND ind.Name is not null
   ORDER BY indexstats.avg_fragmentation_in_percent DESC
 
     OPEN FragmentedTableList
     FETCH NEXT FROM FragmentedTableList
-    INTO @tableName, @indexName, @indexType, @percentFragment
+    INTO @tableName, @schemaName, @indexName, @indexType, @percentFragment
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
-      print 'Processing ' + @indexName + 'on table ' + @tableName + ' which is ' + cast(@percentFragment as nvarchar(50)) + ' fragmented'
-
-      if(@percentFragment>= 50) -- Rebuild indexes with fragmentation higher than this. Else Reorg
+      print 'Processing ' + @indexName + 'on table ' + @schemaName + '.' + @tableName + ' which is ' + cast(@percentFragment as nvarchar(50)) + ' fragmented'
+      if(@percentFragment>= 50) -- Anything higher than this percentage will be Rebuilt, ELSE Reorg
       BEGIN
-            EXEC( 'ALTER INDEX ' +  @indexName + ' ON ' + @tableName + ' REBUILD; ')
-       print 'Finished Rebuild ' + @indexName + 'on table ' + @tableName
+		EXEC( 'ALTER INDEX ' +  @indexName + ' ON ' + @schemaName + '.' + @tableName + ' REBUILD; ')
+		print 'Finished Rebuild ' + @indexName + 'on table ' + @schemaName + '.' + @tableName
       END
       ELSE
       BEGIN
-         EXEC( 'ALTER INDEX ' +  @indexName + ' ON ' + @tableName + ' REORGANIZE;')
-        print 'Finished reorg ' + @indexName + 'on table ' + @tableName
+        EXEC( 'ALTER INDEX ' +  @indexName + ' ON ' + @schemaName + '.' + @tableName + ' REORGANIZE;')
+		print 'Finished reorg ' + @indexName + 'on table ' + @schemaName + '.' + @tableName
       END
       FETCH NEXT FROM FragmentedTableList
-        INTO @tableName, @indexName, @indexType, @percentFragment
+        INTO @tableName, @schemaName, @indexName, @indexType, @percentFragment
     END
     CLOSE FragmentedTableList
     DEALLOCATE FragmentedTableList
