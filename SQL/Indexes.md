@@ -58,8 +58,8 @@ declare FragmentedTableList cursor for
    INNER JOIN sys.indexes ind ON ind.object_id = indexstats.object_id
         AND ind.index_id = indexstats.index_id
   WHERE
--- indexstats.avg_fragmentation_in_percent , e.g. > 30, you can specify any number in percent
-   indexstats.avg_fragmentation_in_percent > 5
+-- indexstats.avg_fragmentation_in_percent , e.g. > 30, you can specify any number in percent. 30% is a good starting point.
+   indexstats.avg_fragmentation_in_percent > 30
   AND ind.Name is not null
   ORDER BY indexstats.avg_fragmentation_in_percent DESC
 
@@ -71,7 +71,7 @@ declare FragmentedTableList cursor for
     BEGIN
       print 'Processing ' + @indexName + 'on table ' + @tableName + ' which is ' + cast(@percentFragment as nvarchar(50)) + ' fragmented'
 
-      if(@percentFragment<= 30)
+      if(@percentFragment>= 50) -- Rebuild indexes with fragmentation higher than this. Else Reorg
       BEGIN
             EXEC( 'ALTER INDEX ' +  @indexName + ' ON ' + @tableName + ' REBUILD; ')
        print 'Finished Rebuild ' + @indexName + 'on table ' + @tableName
